@@ -1,11 +1,15 @@
 import Image from "next/image";
+import Header from "./components/betlog";
 
 
 export default function Home() {
-  return (
+  return ( 
+    
 
     <div>
       irish loves you
+
+      <Header/>
     </div>
 
 
