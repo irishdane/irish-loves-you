@@ -8,6 +8,34 @@ import { Tick02Icon } from '@hugeicons/core-free-icons';
 
 import './CodeSlots.css';
 
+type CodeSlotsProps = {
+  length?: number;
+  value?: string | number;
+  defaultValue?: string;
+  onChange?: (code: string) => void;
+  onComplete?: (code: string) => void;
+  status?: string;
+  mask?: boolean;
+  caret?: boolean;
+  disabled?: boolean;
+  autoFocus?: boolean;
+  accentColor?: string;
+  inkColor?: string;
+  slotColor?: string;
+  digitColor?: string;
+  dangerColor?: string;
+  slotSize?: number;
+  gap?: number;
+  radius?: number;
+  bounce?: number;
+  settle?: number;
+  rise?: number;
+  cascade?: number;
+  ariaLabel?: string;
+  placeholder?: string;
+  className?: string;
+};
+
 const EASE_OUT = [0.23, 1, 0.32, 1];
 const WASH_IN = 0.3;
 const WASH_OUT = 0.2;
@@ -55,7 +83,7 @@ export default function CodeSlots({
   ariaLabel = 'One-time code',
   placeholder = '',
   className = ''
-}) {
+}: CodeSlotsProps) {
   const uid = useId();
   const reduce = useReducedMotion();
   const inputRef = useRef(null);
@@ -463,4 +491,3 @@ function Slot({ mv, drop, char, active, rise, sink, placeholder }) {
     </span>
   );
 }
-
