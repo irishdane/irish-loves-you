@@ -544,69 +544,49 @@ body:has(.lorraine-story) {
   margin-right: auto;
   margin-left: auto;
 }
-.birthday-photo-empty {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  border: 1px dashed rgb(41 37 30 / 24%);
-  border-radius: 16px;
-  color: #69665f;
-  text-align: center;
-  font-size: 14px;
-  line-height: 1.6;
-}
-.birthday-photo-empty code {
-  padding: 3px 6px;
-  border-radius: 5px;
-  background: #fff9e9;
-  color: #29251e;
-  font-size: 0.9em;
-}
-
 .birthday-experience--letters {
   background: #fbfaf7;
 }
-.birthday-letter-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  max-width: 1100px;
+.birthday-letter-swap {
+  height: 470px;
+  max-width: 620px;
   margin: 0 auto;
 }
-.birthday-letter {
-  position: relative;
-  min-height: 225px;
-  padding: 25px;
-  border: 1px solid rgb(41 37 30 / 10%);
-  border-radius: 16px;
-  background: #fff;
+.birthday-note-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px;
+  border: 3px solid #29251e;
+  color: #fff;
+  font-family: var(--font-alte-haas-grotesk), Arial, sans-serif;
+  font-weight: 400;
   scroll-margin-top: 100px;
 }
-.birthday-letter__number {
-  color: #77736b;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+.card-swap-card.birthday-note-card--green {
+  background: #01a791;
 }
-.birthday-letter__heart {
-  position: absolute;
-  top: 20px;
-  right: 22px;
-  color: #e6007e;
-  font-size: 23px;
+.card-swap-card.birthday-note-card--orange {
+  background: #fe9039;
 }
-.birthday-letter h3 {
-  margin: 40px 0 10px;
-  font-size: 21px;
-  letter-spacing: -0.04em;
+.card-swap-card.birthday-note-card--pink {
+  background: #e6007e;
 }
-.birthday-letter p {
+.birthday-note-card h3 {
   margin: 0;
-  color: #77736b;
-  font-family: Georgia, serif;
-  font-size: 15px;
-  font-style: italic;
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 700;
+  text-align: left;
+}
+.birthday-note-card p {
+  margin: 0;
+  font-size: 16px;
   line-height: 1.6;
+  text-align: left;
+}
+.card-swap-card.birthday-note-card h3,
+.card-swap-card.birthday-note-card p {
+  color: #fff;
 }
 
 .birthday-experience--game {
@@ -702,9 +682,6 @@ body:has(.lorraine-story) {
   .birthday-cake {
     transform: scale(0.88);
   }
-  .birthday-letter-grid {
-    gap: 14px;
-  }
 }
 @media (max-width: 768px) {
   .lorraine-story {
@@ -789,12 +766,8 @@ body:has(.lorraine-story) {
   .birthday-section-heading {
     margin-bottom: 28px;
   }
-  .birthday-letter-grid {
-    gap: 20px;
-    max-width: 460px;
-  }
-  .birthday-letter {
-    min-height: 190px;
+  .birthday-letter-swap {
+    height: 400px;
   }
   .birthday-game {
     min-height: 0;
@@ -805,6 +778,11 @@ body:has(.lorraine-story) {
   }
   .birthday-game__copy {
     margin: 0 auto;
+  }
+}
+@media (max-width: 360px) {
+  .birthday-letter-swap {
+    height: 370px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -828,3 +806,5 @@ body:has(.lorraine-story) {
     transition: none;
   }
 }
+
+

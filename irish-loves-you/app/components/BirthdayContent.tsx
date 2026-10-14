@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import TechText from "./TechText";
 import Masonry, { type MasonryItem } from "./Masonry";
+import CardSwap, { Card } from "./CardSwap";
 import "./BirthdayBalloons.css";
 
 const WORDS = ["HAPPY", "LORRAINE", "DAY!"] as const;
@@ -14,7 +15,39 @@ const BALLOONS = [
 ] as const;
 
 const GAME_GOAL = 5;
-const PHOTO_HEIGHTS = [400, 400, 400, 400, 800, 338, 450, 400, 800, 338, 800, 800, 1067, 1067, 800, 800];
+const NOTES = [
+  { text: "The way you fix your hair, especially your bangs.", color: "green" },
+  { text: "The way your eyes almost disappear whenever you smile.", color: "green" },
+  { text: "The mirror selfies you send me before going out.", color: "green" },
+  { text: "The way you stop to admire cats whenever we're together.", color: "green" },
+  { text: "The way you randomly pick flowers for me when we're walking.", color: "green" },
+  { text: "The way you playfully tease me over the littlest things.", color: "green" },
+  { text: "The way we can be silly and goofy around each other.", color: "green" },
+  { text: "The way you gently guide me by my waist when we're walking.", color: "green" },
+  { text: "The little notes you leave for me.", color: "green" },
+  { text: "The way you look into my eyes and hold my gaze.", color: "green" },
+  { text: "The way you wait for me, even when it takes a while.", color: "green" },
+  { text: "The way you wake up just to see me off when I have to go home.", color: "green" },
+  { text: "The thoughtful things you do for me, even without being asked.", color: "orange" },
+  { text: "The way you're always kind and genuine toward other people.", color: "orange" },
+  { text: "The way you never take things or people for granted.", color: "orange" },
+  { text: "Your unwavering dedication and love for everything you do.", color: "orange" },
+  { text: "Your faithfulness and devotion to the Lord.", color: "orange" },
+  { text: "The way you help me see life from a different perspective.", color: "orange" },
+  { text: "The way you continue to make time for me, despite everything going on in your life.", color: "orange" },
+  { text: "The way you support me every step of the way and make me feel safe enough to be completely myself with you.", color: "orange" },
+  { text: "The way you playfully tease me.", color: "pink" },
+  { text: "Your legs.", color: "pink" },
+  { text: "Your torso.", color: "pink" },
+  { text: "Your ass.", color: "pink" },
+  { text: "The way you kiss me so softly.", color: "pink" },
+  { text: "Your fingers.", color: "pink" },
+  { text: "The way you make love to me with so much passion.", color: "pink" },
+] as const;
+const PHOTO_HEIGHTS = [
+  400, 400, 400, 400, 800, 338, 450, 400, 800, 338, 800, 800, 1067, 1067, 800, 800,
+  800, 800, 800, 800, 800, 800, 800, 800, 800, 800, 800,
+];
 const PHOTO_ITEMS: MasonryItem[] = PHOTO_HEIGHTS.map((height, index) => {
   const number = index + 1;
   const image = `/images/pic${number}.jpg`;
@@ -183,40 +216,53 @@ export default function BirthdayContent() {
             <h2 id="photos-title">Our little photo album.</h2>
             <p>Your favorite memories, together in one place.</p>
           </div>
-          {PHOTO_ITEMS.length > 0 ? (
-            <Masonry
-              items={PHOTO_ITEMS}
-              ease="power3.out"
-              duration={0.6}
-              stagger={0.05}
-              animateFrom="bottom"
-              scaleOnHover
-              hoverScale={0.95}
-              blurToFocus
-              colorShiftOnHover={false}
-            />
-          ) : (
-            <p className="birthday-photo-empty">
-              Your photos will go here. Add them to <code>public/images/album</code> to start your gallery.
-            </p>
-          )}
+          <Masonry
+            items={PHOTO_ITEMS}
+            ease="power3.out"
+            duration={0.6}
+            stagger={0.05}
+            animateFrom="bottom"
+            scaleOnHover
+            hoverScale={0.95}
+            blurToFocus
+            colorShiftOnHover={false}
+          />
         </section>
 
         <section className="birthday-experience birthday-experience--letters" id="letters" aria-labelledby="letters-title">
           <div className="birthday-section-heading">
             <p className="lorraine-eyebrow">WORDS TO KEEP</p>
-            <h2 id="letters-title">Little notes, just for you.</h2>
-            <p>These are yours to personalize with the things you want her to know.</p>
+            <h2 id="letters-title">27 Things I Love About You ♡</h2>
+            <p>A little collection of things I love about you.</p>
           </div>
-          <div className="birthday-letter-grid">
-            {["A little note", "Open when you need a smile", "One more thing"].map((title, index) => (
-              <article className="birthday-letter" key={title}>
-                <span className="birthday-letter__number">0{index + 1}</span>
-                <span className="birthday-letter__heart" aria-hidden="true">♡</span>
-                <h3>{title}</h3>
-                <p>[Your personal message goes here.]</p>
-              </article>
-            ))}
+          <div className="birthday-letter-swap">
+            <CardSwap
+              width={380}
+              height={300}
+              cardDistance={0}
+              verticalDistance={55}
+              depth={75}
+              skewAmount={0}
+              visibleCards={3}
+              cardRadius={18}
+              delay={5000}
+              hoverSpread={0.08}
+              dim={0.3}
+              theme="light"
+              autoplay
+              pauseOnHover
+              draggable
+            >
+              {NOTES.map(({ text, color }, index) => (
+                <Card
+                  customClass={`birthday-note-card birthday-note-card--${color}`}
+                  key={index}
+                >
+                  <h3>Thing {index + 1}</h3>
+                  <p>{text}</p>
+                </Card>
+              ))}
+            </CardSwap>
           </div>
         </section>
 
