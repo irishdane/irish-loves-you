@@ -1,8 +1,8 @@
-// @ts-nocheck
 'use client';
 
+import type { ChangeEvent, ClipboardEvent, CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { animate, motion, motionValue, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
+import { animate, motion, motionValue, useMotionValue, useReducedMotion, useTransform, type MotionValue } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Tick02Icon } from '@hugeicons/core-free-icons';
 
@@ -14,7 +14,7 @@ type CodeSlotsProps = {
   defaultValue?: string;
   onChange?: (code: string) => void;
   onComplete?: (code: string) => void;
-  status?: string;
+  status?: SlotStatus;
   mask?: boolean;
   caret?: boolean;
   disabled?: boolean;
@@ -36,7 +36,24 @@ type CodeSlotsProps = {
   className?: string;
 };
 
-const EASE_OUT = [0.23, 1, 0.32, 1];
+type SlotStatus = 'idle' | 'error' | 'success';
+type LiveSettings = {
+  settle: number;
+  bounce: number;
+  cascade: number;
+  reduce: boolean | null;
+};
+type SlotProps = {
+  mv: MotionValue<number>;
+  drop: MotionValue<number>;
+  char: string;
+  active: boolean;
+  rise: number;
+  sink: number;
+  placeholder: string;
+};
+
+const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 const WASH_IN = 0.3;
 const WASH_OUT = 0.2;
 const SINK_DELAY = 0.06;
@@ -45,17 +62,17 @@ const CHECK_DELAY = 0.28;
 const CHECK_RISE = 8;
 const SINK_FADE = 0.6;
 
-const clamp01 = v => Math.min(1, Math.max(0, v));
-const digitsOf = raw => String(raw ?? '').replace(/\D/g, '');
-const toSlots = (raw, n) => {
-  const d = digitsOf(raw).slice(0, n);
-  return Array.from({ length: n }, (_, i) => d[i] ?? '');
+const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+const digitsOf = (raw: string | number | null | undefined) => String(raw ?? '').replace(/\D/g, '');
+const toSlots = (raw: string | number | null | undefined, length: number) => {
+  const digits = digitsOf(raw).slice(0, length);
+  return Array.from({ length }, (_, index) => digits[index] ?? '');
 };
-const firstEmptyOf = slots => {
+const firstEmptyOf = (slots: string[]) => {
   const i = slots.indexOf('');
   return i === -1 ? slots.length - 1 : i;
 };
-const isFull = slots => slots.every(Boolean);
+const isFull = (slots: string[]) => slots.every(Boolean);
 
 export default function CodeSlots({
   length = 6,
@@ -86,41 +103,46 @@ export default function CodeSlots({
 }: CodeSlotsProps) {
   const uid = useId();
   const reduce = useReducedMotion();
-  const inputRef = useRef(null);
-  const rowRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
   const [slots, setSlots] = useState(() => toSlots(value ?? defaultValue, length));
   const [active, setActive] = useState(() => firstEmptyOf(slots));
   const [focused, setFocused] = useState(false);
-  const [veiled, setVeiled] = useState(status === 'success');
   const activeMv = useMotionValue(active);
   const openMv = useMotionValue(status === 'success' ? 1 : 0);
   const checkMv = useMotionValue(status === 'success' ? 1 : 0);
-  const glide = useRef(new Set());
-  const target = useRef([]);
+  const glide = useRef(new Set<number>());
+  const target = useRef<Array<number | undefined>>([]);
   const draining = useRef(false);
-  const drainTimer = useRef(undefined);
-  const statusRef = useRef(status);
+  const drainTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const statusRef = useRef<SlotStatus>(status);
   const emitted = useRef(digitsOf(value ?? defaultValue).slice(0, length));
   const slotsRef = useRef(slots);
-  slotsRef.current = slots;
-  const live = useRef({});
-  live.current = { settle, bounce, cascade, reduce };
+  const live = useRef<LiveSettings>({ settle, bounce, cascade, reduce });
 
   const springs = useMemo(
     () => ({
-      mvs: Array.from({ length }, (_, i) => motionValue(slotsRef.current[i] ? 1 : 0)),
-      drops: Array.from({ length }, () => motionValue(statusRef.current === 'success' ? 1 : 0))
+      mvs: Array.from({ length }, (_, index) => motionValue(slots[index] ? 1 : 0)),
+      drops: Array.from({ length }, () => motionValue(status === 'success' ? 1 : 0))
     }),
+    // Motion values are recreated only when the slot count changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [length]
   );
   const { mvs, drops } = springs;
+  useEffect(() => {
+    live.current = { settle, bounce, cascade, reduce };
+  }, [settle, bounce, cascade, reduce]);
+  useEffect(() => {
+    mvs.forEach((mv, index) => mv.jump(slotsRef.current[index] ? 1 : 0));
+    drops.forEach(mv => mv.jump(statusRef.current === 'success' ? 1 : 0));
+  }, [mvs, drops]);
   const pitch = slotSize + gap;
   const height = Math.round(slotSize * 1.18);
   const washRadius = Math.min(radius, slotSize / 2);
 
   const drive = useCallback(
-    (i, to, delayMs = 0) => {
+    (i: number, to: number, delayMs = 0) => {
       const mv = mvs[i];
       if (!mv) return;
       target.current[i] = to;
@@ -134,14 +156,14 @@ export default function CodeSlots({
     [mvs]
   );
   const land = useCallback(
-    (i, delayMs = 0) => {
+    (i: number, delayMs = 0) => {
       if (mvs[i].get() > 0) mvs[i].jump(0);
       drive(i, 1, delayMs);
     },
     [mvs, drive]
   );
   const moveActive = useCallback(
-    (next, crossed) => {
+    (next: number, crossed: number[]) => {
       crossed.forEach(j => glide.current.add(j));
       activeMv.jump(next);
       setActive(next);
@@ -149,7 +171,7 @@ export default function CodeSlots({
     [activeMv]
   );
   const jumpActive = useCallback(
-    next => {
+    (next: number) => {
       glide.current.clear();
       activeMv.jump(next);
       setActive(next);
@@ -181,7 +203,7 @@ export default function CodeSlots({
   const checkOpacity = useTransform(checkMv, clamp01);
 
   const commit = useCallback(
-    next => {
+    (next: string[]) => {
       const prev = slotsRef.current;
       slotsRef.current = next;
       setSlots(next);
@@ -193,7 +215,7 @@ export default function CodeSlots({
     [onChange, onComplete]
   );
 
-  const insert = (raw, from = active) => {
+  const insert = (raw: string, from = active) => {
     const digits = digitsOf(raw);
     if (!digits) return;
     const next = [...slotsRef.current];
@@ -211,7 +233,7 @@ export default function CodeSlots({
     commit(next);
     moveActive(Math.min(i, length - 1), crossed);
   };
-  const clearSlot = (i, stepBack = false) => {
+  const clearSlot = (i: number, stepBack = false) => {
     if (!slotsRef.current[i]) {
       if (stepBack) jumpActive(i);
       return;
@@ -223,9 +245,8 @@ export default function CodeSlots({
     if (stepBack) moveActive(i, [i]);
   };
 
-  const busy = disabled || draining.current || status === 'success';
-  const onKeyDown = e => {
-    if (busy || e.metaKey || e.ctrlKey || e.altKey) return;
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (disabled || draining.current || status === 'success' || e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key;
     if (/^[0-9]$/.test(k)) {
       e.preventDefault();
@@ -251,18 +272,18 @@ export default function CodeSlots({
       jumpActive(length - 1);
     }
   };
-  const onPaste = e => {
-    if (busy) return;
+  const onPaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    if (disabled || draining.current || status === 'success') return;
     e.preventDefault();
     insert(e.clipboardData.getData('text'));
   };
-  const onInput = e => {
-    if (busy) return;
+  const onInput = (e: ChangeEvent<HTMLInputElement>) => {
+    if (disabled || draining.current || status === 'success') return;
     const d = digitsOf(e.target.value);
     if (!d) return;
     insert(d, d.length === 1 ? active : 0);
   };
-  const onRowMouseDown = e => {
+  const onRowMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     if (disabled) return;
     e.preventDefault();
     const row = rowRef.current;
@@ -298,8 +319,8 @@ export default function CodeSlots({
     const prev = slotsRef.current;
     const next = toSlots(clean, length);
     const hidden = statusRef.current === 'success';
-    const landing = [];
-    const leaving = [];
+    const landing: number[] = [];
+    const leaving: number[] = [];
     next.forEach((ch, i) => {
       if (ch === prev[i]) return;
       (ch ? landing : leaving).push(i);
@@ -324,18 +345,17 @@ export default function CodeSlots({
     const was = statusRef.current;
     const L = live.current;
     if (status === 'success') {
-      setVeiled(true);
       if (L.reduce) {
         openMv.jump(1);
         drops.forEach(d => d.jump(1));
         checkMv.jump(1);
         return;
       }
-      animate(openMv, 1, { duration: WASH_IN, ease: EASE_OUT });
+      animate<number>(openMv, 1, { duration: WASH_IN, ease: EASE_OUT });
       drops.forEach((d, k) =>
-        animate(d, 1, { type: 'spring', duration: 0.3, bounce: 0, delay: SINK_DELAY + k * SINK_STEP })
+        animate<number>(d, 1, { type: 'spring', duration: 0.3, bounce: 0, delay: SINK_DELAY + k * SINK_STEP })
       );
-      animate(checkMv, 1, { type: 'spring', duration: 0.35, bounce: L.bounce, delay: CHECK_DELAY });
+      animate<number>(checkMv, 1, { type: 'spring', duration: 0.35, bounce: L.bounce, delay: CHECK_DELAY });
       return;
     }
     if (was !== 'success') return;
@@ -343,14 +363,11 @@ export default function CodeSlots({
       openMv.jump(0);
       checkMv.jump(0);
       drops.forEach(d => d.jump(0));
-      setVeiled(false);
       return;
     }
-    animate(checkMv, 0, { duration: 0.15, ease: EASE_OUT });
-    animate(openMv, 0, { duration: WASH_OUT, ease: EASE_OUT, delay: 0.06 }).then(() => {
-      if (openMv.get() === 0) setVeiled(false);
-    });
-    drops.forEach(d => animate(d, 0, { type: 'spring', duration: 0.3, bounce: 0, delay: 0.1 }));
+    animate<number>(checkMv, 0, { duration: 0.15, ease: EASE_OUT });
+    animate<number>(openMv, 0, { duration: WASH_OUT, ease: EASE_OUT, delay: 0.06 });
+    drops.forEach(d => animate<number>(d, 0, { type: 'spring', duration: 0.3, bounce: 0, delay: 0.1 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
@@ -387,7 +404,7 @@ export default function CodeSlots({
 
   const view = slots.length === length ? slots : Array.from({ length }, (_, i) => slots[i] ?? '');
   const showCaret =
-    caret && focused && !disabled && !veiled && status !== 'success' && (status === 'error' || !view[active]);
+    caret && focused && !disabled && status !== 'success' && (status === 'error' || !view[active]);
 
   return (
     <div
@@ -403,7 +420,7 @@ export default function CodeSlots({
         '--cs-gap': `${gap}px`,
         '--cs-radius': `${Math.min(radius, slotSize / 2)}px`,
         '--cs-font': `${Math.round(slotSize * 0.5)}px`
-      }}
+      } as CSSProperties}
     >
       <div
         ref={rowRef}
@@ -466,12 +483,18 @@ export default function CodeSlots({
   );
 }
 
-function Slot({ mv, drop, char, active, rise, sink, placeholder }) {
+function Slot({ mv, drop, char, active, rise, sink, placeholder }: SlotProps) {
   const [shown, setShown] = useState(char);
   if (char && char !== shown) setShown(char);
   const fill = useTransform(mv, t => `scale(${Math.max(t, 0)})`);
-  const lift = useTransform([mv, drop], ([t, d]) => `translateY(${(1 - t) * rise + Math.max(d, 0) * sink}px)`);
-  const ink = useTransform([mv, drop], ([t, d]) => clamp01(t) * (1 - clamp01(d / SINK_FADE)));
+  const lift = useTransform([mv, drop], (values: number[]) => {
+    const [t, d] = values;
+    return `translateY(${(1 - t) * rise + Math.max(d, 0) * sink}px)`;
+  });
+  const ink = useTransform([mv, drop], (values: number[]) => {
+    const [t, d] = values;
+    return clamp01(t) * (1 - clamp01(d / SINK_FADE));
+  });
   return (
     <span
       className="code-slots__slot"

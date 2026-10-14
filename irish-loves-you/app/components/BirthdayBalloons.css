@@ -1,0 +1,86 @@
+.lorraine-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.lorraine-hero__balloons {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lorraine-hero__balloon {
+  position: absolute;
+  display: block;
+  width: clamp(160px, 25vw, 300px);
+  height: auto;
+  object-fit: contain;
+  animation: balloon-float 5.5s ease-in-out infinite alternate;
+  filter: drop-shadow(0 14px 18px rgb(41 37 30 / 18%));
+  will-change: transform;
+}
+
+.lorraine-hero__balloon--pink {
+  top: 17%;
+  left: 12%;
+  animation-delay: -2.2s;
+}
+
+.lorraine-hero__balloon--green {
+  top: 34%;
+  right: 15%;
+  animation-delay: -4.1s;
+}
+
+.lorraine-hero__balloon--orange {
+  bottom: 5%;
+  left: 16%;
+  animation-delay: -1.3s;
+}
+
+.lorraine-hero__top,
+.lorraine-hero__center,
+.lorraine-hero__bottom {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes balloon-float {
+  from {
+    transform: translate3d(-4px, 8px, 0) rotate(-3deg);
+  }
+  to {
+    transform: translate3d(5px, -12px, 0) rotate(3deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .lorraine-hero__balloon {
+    width: clamp(110px, 29vw, 185px);
+  }
+
+  .lorraine-hero__balloon--pink {
+    top: 17%;
+    left: 8%;
+  }
+
+  .lorraine-hero__balloon--green {
+    top: 38%;
+    right: 11%;
+  }
+
+  .lorraine-hero__balloon--orange {
+    bottom: 7%;
+    left: 2%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lorraine-hero__balloon {
+    animation: none;
+    will-change: auto;
+  }
+}

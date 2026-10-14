@@ -1,0 +1,61 @@
+.masonry {
+  position: relative;
+  width: 100%;
+}
+
+.masonry__item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  padding: 7px;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  will-change: transform, width, height, opacity;
+}
+
+.masonry__item:focus-visible {
+  z-index: 1;
+  outline: 3px solid #00a993;
+  outline-offset: -4px;
+  border-radius: 14px;
+}
+
+.masonry__image {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: #f2f0e9;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: grayscale(1);
+  box-shadow: 0 10px 32px rgb(41 37 30 / 12%);
+  transition: filter 280ms ease;
+}
+
+.masonry__item:hover .masonry__image,
+.masonry__item:focus-visible .masonry__image {
+  filter: grayscale(0);
+}
+
+.masonry__overlay {
+  position: absolute;
+  inset: 7px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgb(230 0 126 / 30%), rgb(254 193 13 / 20%));
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .masonry__item {
+    will-change: auto;
+  }
+}

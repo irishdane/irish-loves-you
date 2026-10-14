@@ -6,7 +6,9 @@ import CodeSlots from "./CodeSlots";
 type Status = "idle" | "error" | "success";
 const BIRTHDAY = "101699"; // MMDDYY; playful gate, not secure authentication
 
-export default function BirthdayLogin() {
+type BirthdayLoginProps = { onUnlock: () => void };
+
+export default function BirthdayLogin({ onUnlock }: BirthdayLoginProps) {
   const [status, setStatus] = useState<Status>("idle");
 
   useEffect(() => {
@@ -15,6 +17,12 @@ export default function BirthdayLogin() {
     const timer = window.setTimeout(() => setStatus("idle"), 1100);
     return () => window.clearTimeout(timer);
   }, [status]);
+
+  useEffect(() => {
+    if (status !== "success") return;
+    const timer = window.setTimeout(onUnlock, 1500);
+    return () => window.clearTimeout(timer);
+  }, [status, onUnlock]);
 
   return (
     <div className="birthday-login">
@@ -25,7 +33,7 @@ export default function BirthdayLogin() {
 
       <section className="birthday-login__intro">
         <p className="birthday-login__eyebrow">TO MY FAVORITE PERSON,</p>
-        <h1>Mah boogie.</h1>
+        <h1>Mah boogie<span>.</span></h1>
         <p className="birthday-login__description">
           I made a little corner of the internet just for you.
           Before we begin, tell me when your story started.
@@ -72,8 +80,8 @@ export default function BirthdayLogin() {
       </section>
 
       <footer className="birthday-login__footer">
-        
-        
+        <span>MADE WITH LOVE ♡</span>
+        <span>OCTOBER 16, 2026</span>
       </footer>
     </div>
   );
